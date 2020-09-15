@@ -15,27 +15,6 @@ class ApiRequest
      */
     protected $validator;
 
-    protected $defaultMessages = [
-        Validator\Alnum::class => 'Alpha-numeric expected',
-        Validator\Alpha::class => 'Alpha expected',
-        Validator\Date::class => 'Date expected',
-        Validator\Digit::class => 'Digit expected',
-        Validator\File::class => 'File expected',
-        Validator\Uniqueness::class => 'Unique value expected',
-        Validator\Numericality::class => 'Number expected',
-        Validator\PresenceOf::class => 'Is required',
-        Validator\Identical::class => 'Should be identical',
-        Validator\Email::class => 'Email expected',
-        Validator\ExclusionIn::class => 'Must not be ...',
-        Validator\InclusionIn::class => 'Should be ...',
-        Validator\Regex::class => 'Incorrect value',
-        Validator\StringLength::class => 'Length is incorrect',
-        Validator\Between::class => 'Should be between ... and ...',
-        Validator\Confirmation::class => 'Doesn\'t match confirmation',
-        Validator\Url::class => 'Must be a URL',
-        Validator\CreditCard::class => 'Credit card number incorrect',
-    ];
-
     public function __construct()
     {
         $this->validator = new Validation();
@@ -81,14 +60,6 @@ class ApiRequest
     {
 
         $class = get_class($validator);
-
-        if (!$validator->hasOption('message')) {
-            if (!$message and array_key_exists($class, $this->defaultMessages)) {
-                $message = $this->defaultMessages[$class];
-            }
-
-            $validator->setOption('message', $message);
-        }
 
         if (!$validator->hasOption('description')) {
             $validator->setOption('description', $description);

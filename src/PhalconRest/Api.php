@@ -55,7 +55,6 @@ class Api extends \PhalconApi\Api
     public function mount(CollectionInterface $collection) : \Phalcon\Mvc\Micro
     {
         if ($collection instanceof ApiCollection) {
-
             $collectionName = $collection->getName();
             if (!is_null($collectionName)) {
                 $this->collectionsByName[$collectionName] = $collection;
