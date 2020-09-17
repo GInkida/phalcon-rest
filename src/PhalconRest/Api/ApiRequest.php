@@ -125,96 +125,128 @@ class ApiRequest
      */
     public function toArray()
     {
-        $rules = [];
+        $validators = $this->validator->getValidators();
 
-        foreach ($this->validator->getValidators() as $item) {
-            $field = $item[0];
-
-            $validator = $item[1];
-
-            if (!($label = $this->validator->getLabel($field))) {
-                $label = $field;
-            }
-
-            if (!array_key_exists($field, $rules)) {
-                $rules[$field] = [
-                    'field' => $field,
-                ];
-            }
-
-            $options = [
-                'message',
-                'min', // Validator\StringLength
-                'max', // Validator\StringLength
-                'messageMaximum', // Validator\StringLength
-                'messageMinimum', // Validator\StringLength
-                'format', // Validator\Date
-                'maxSize', // Validator\File
-                'messageSize', // Validator\File
-                'messageType', // Validator\File
-                'maxResolution', // Validator\File
-                'messageMaxResolution', // Validator\File
-                'accepted', // Validator\Identical
-                'domain', // Validator\ExclusionIn, Validator\InclusionIn
-                'pattern', // Validator\Regex
-                'minimum', // Validator\Between
-                'maximum', // Validator\Between
-                'with', // Validator\Confirmation
-            ];
-
-            $extendedOptions = $validator->getOption('extendedOptions');
-
-            if ($extendedOptions) {
-                $options = array_merge($options, (array)$extendedOptions);
-            }
-
-            $replaces = [
-                ':field' => $label,
-            ];
-
-            foreach ($options as $option) {
-                if ($validator->hasOption($option)) {
-                    $value = $validator->getOption($option);
-
-                    if (is_array($value)) {
-                        $value = implode(', ', $value);
-                    }
-
-                    $replaces[':' . $option] = $value;
-                }
-            }
-
-            $message = $validator->getOption('message');
-
-            if ($message === null) {
-                $typeClass = get_class($validator);
-
-                $type = substr($typeClass, strrpos($typeClass, '\\') + 1);
-
-                $message = $this->validator->getDefaultMessage($type);
-            }
-
-            $description = $validator->getOption('description');
-
-            if ($description === null) {
-                $description = $message;
-            }
-
-            if ($description !== null) {
-                $description = strtr($description, $replaces);
-            }
-
-            $rules[$field]['rules'][] = [
-                'class' => get_class($validator),
-                'message' => $message,
-                'description' => $description,
-            ];
+        if (empty($validators)) {
+            return null;
         }
 
-        $rules = array_values($rules);
+        $fields = [];
+        $count = 0;
+        
+        foreach ($validators as $field => $item) {
+            foreach ($item as $validator) {
+                $options = [
+                    'message',
+                    'min', // Validator\StringLength
+                    'max', // Validator\StringLength
+                    'messageMaximum', // Validator\StringLength
+                    'messageMinimum', // Validator\StringLength
+                    'format', // Validator\Date
+                    'maxSize', // Validator\File
+                    'messageSize', // Validator\File
+                    'messageType', // Validator\File
+                    'maxResolution', // Validator\File
+                    'messageMaxResolution', // Validator\File
+                    'accepted', // Validator\Identical
+                    'domain', // Validator\ExclusionIn, Validator\InclusionIn
+                    'pattern', // Validator\Regex
+                    'minimum', // Validator\Between
+                    'maximum', // Validator\Between
+                    'with', // Validator\Confirmation
+                ];
+
+                $classes = [
+                    "Phalcon\Validation\Validator\Alnum" => 'Альфанумеры',
+                    "Phalcon\Validation\Validator\Alpha" => 'Алфавит',
+                    "Phalcon\Validation\Validator\Date" => 'Валидная дата',
+                    "Phalcon\Validation\Validator\Digit" => 'Цифры',
+                    "Phalcon\Validation\Validator\File" => 'Файл',
+                    "Phalcon\Validation\Validator\Uniqueness" => 'Уникальное',
+                    "Phalcon\Validation\Validator\Numericality" => 'Номер',
+                    "Phalcon\Validation\Validator\PresenceOf" => 'Не пусто',
+                    "Phalcon\Validation\Validator\Identical" => 'Идентично другому',
+                    "Phalcon\Validation\Validator\Email" => 'Почта',
+                    "Phalcon\Validation\Validator\ExclusionIn" => 'Не входит в лист',
+                    "Phalcon\Validation\Validator\InclusionIn" => 'Входит в лист',
+                    "Phalcon\Validation\Validator\Regex	Validates" => 'Regex',
+                    "Phalcon\Validation\Validator\StringLength" => 'Определенная длина строки',
+                    "Phalcon\Validation\Validator\Between" => 'Между двумя значениями',
+                    "Phalcon\Validation\Validator\Confirmation" => 'Подтверждение другого',
+                    "Phalcon\Validation\Validator\Url" => 'Валидный URL',
+                    "Phalcon\Validation\Validator\CreditCard" => 'Кредитная карта',
+                    "Phalcon\Validation\Validator\Callback" => 'Функция',
+                ];
+
+                $extendedOptions = $validator->getOption('extendedOptions');
+
+                if ($extendedOptions) {
+                    $options = array_merge($options, (array)$extendedOptions);
+                }
+
+                $description = '';
+                $message = '';
+
+                foreach ($options as $option) {
+                    if ($validator->hasOption($option)) {
+                        $value = $validator->getOption($option);
+
+                        if (is_array($value)) {
+                            $value = implode(', ', $value);
+                        }
+
+                        $description .= $value;
+                    }
+                }
+
+                if (method_exists($validator,'getValidators')) {
+                    foreach ($validator->getValidators() as $childValidator) {
+                        foreach ($options as $option) {
+                            if ($childValidator->hasOption($option)) {
+                                $value = $childValidator->getOption($option);
+
+                                if (is_array($value)) {
+                                    $value = implode(', ', $value);
+                                }
+
+                                $description .= $value;
+                            }
+                        }
+
+                        if ($template = $childValidator->getTemplate()) {
+                            $message = str_replace(':field', $field, $template);
+
+                            foreach ($classes as $class => $value) {
+                                $message = str_replace($class, $value, $message);
+                            }
+                        }
+                    }
+                }
+
+                if ($template = $validator->getTemplate()) {
+                    $message = str_replace(':field', $field, $template);
+
+                    foreach ($classes as $class => $value) {
+                        $message = str_replace($class, $value, $message);
+                    }
+                }
+
+                if (isset($classes[get_class($validator)])) {
+                    $class = $classes[get_class($validator)];
+                }
+
+                $fields[$count]['rules'][] = [
+                    'class' => $class,
+                    'message' => $message,
+                    'description' => $description,
+                ];
+            }
+            $fields[$count]['field'] = $field;
+            $count++;
+        }
 
         return [
-            'fields' => $rules
+            'fields' => $fields
         ];
     }
 }

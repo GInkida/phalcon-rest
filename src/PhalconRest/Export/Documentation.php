@@ -95,20 +95,7 @@ class Documentation extends Plugin
             $endpoint->setPath($apiEndpoint->getPath());
             $endpoint->setExampleResponse($apiEndpoint->getExampleResponse());
             $endpoint->setRequest($apiEndpoint->getRequest()->toArray());
-
-            $allowedRoleNames = [];
-
-            /** @var \Phalcon\Acl\Role $role */
-            foreach ($aclRoles as $role) {
-
-                if ($this->acl->isAllowed($role->getName(), $apiCollection->getIdentifier(),
-                    $apiEndpoint->getIdentifier())
-                ) {
-                    $allowedRoleNames[] = $role->getName();
-                }
-            }
-
-            $endpoint->setAllowedRoles($allowedRoleNames);
+            $endpoint->setAllowedRoles($apiEndpoint->getAllowedRoles());
 
             $collection->addEndpoint($endpoint);
         }

@@ -17,7 +17,6 @@ class ApiCollectionTransformer extends Transformer
             'name' => $collection->getName(),
             'description' => $collection->getDescription(),
             'prefix' => $collection->getPath(),
-            'fields' => $collection->getFields()
         ];
     }
 
