@@ -128,7 +128,7 @@ class ApiRequest
         $validators = $this->validator->getValidators();
 
         if (empty($validators)) {
-            return null;
+            return [];
         }
 
         $fields = [];
